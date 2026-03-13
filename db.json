@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "title": "привет",
+      "object": "Дата-центр DC-1",
+      "severity": "Critical",
+      "status": "Обнаружены нарушения",
+      "id": "3"
+    },
+    {
+      "id": "122b",
+      "name": "Проверка защищенности узла связи",
+      "title": "Аудит безопасности доступа к маршрутизатору ядра сети",
+      "object": "Маршрутизатор Core-R1 (ЦОД-1)",
+      "severity": "High",
+      "status": "В процессе"
+    },
+    {
+      "id": "1ccf",
+      "name": "*(?(?(:?(*?(",
+      "title": "акакакак",
+      "object": "473834783",
+      "severity": "High",
+      "status": "В процессе"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}
