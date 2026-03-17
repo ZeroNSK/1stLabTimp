@@ -2,12 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-let data = []; // Обычная переменная для хранения данных
+let data = [];
 
-// Функция для загрузки данных
 async function loadData() {
   try {
-    const response = await axios.get("http://localhost:5001/items");
+    const response = await axios.get("http://172.17.7.138:5001/items");
     data = response.data;
     console.log("Данные загружены:", data);
   } catch (error) {
@@ -15,15 +14,11 @@ async function loadData() {
   }
 }
 
-// Загружаем данные перед рендером
 await loadData();
-
-// Функция для удаления товара
 function deleteItem(id) {
-  axios.delete(`http://localhost:5001/items/${id}`)
+  axios.delete(`http://172.17.7.138:5001/items/${id}`)
     .then(() => {
       console.log(`Запись ${id} удалена`);
-      // Удаляем элемент из списка вручную
       data = data.filter(item => item.id !== id);
       console.log("Обновленные данные:", data);
     })
@@ -38,13 +33,11 @@ const Home = () => {
       <ul>
         {data.map(item => (
           <li key={item.id} style={{ marginBottom: "10px" }}>
-            
-            {/* Если есть новое поле title — используем его */}
+    
             <Link to={`/detail/${item.id}`}>
               {item.title || item.name}
             </Link>
 
-            {/* Добавляем отображение новых полей (если они есть) */}
             {item.object && (
               <div>
                 Объект: {item.object}

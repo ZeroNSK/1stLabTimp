@@ -9,7 +9,7 @@ const Detail = () => {
 
   async function loadItem() {
     try {
-      const response = await axios.get(`http://localhost:5001/items/${id}`);
+      const response = await axios.get(`http://172.17.7.138:5001/items/${id}`);
       setItemData(response.data);
       console.log("Загруженный протокол:", response.data);
     } catch (error) {

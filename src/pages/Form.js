@@ -19,7 +19,7 @@ const Form = () => {
 
     async function loadItem() {
         try {
-            const response = await axios.get(`http://localhost:5001/items/${id}`);
+            const response = await axios.get(`http://172.17.7.138:5001/items/${id}`);
             const item = response.data;
 
             if (titleRef.current) titleRef.current.value = item.title || "";
@@ -44,8 +44,7 @@ const Form = () => {
 
 
         if (id) {
-            // РЕДАКТИРОВАНИЕ
-            axios.put(`http://localhost:5001/items/${id}`, JSON.stringify(itemData), {
+            axios.put(`http://172.17.7.138:5001/items/${id}`, JSON.stringify(itemData), {
                 headers: { "Content-Type": "application/json" }
             })
             .then(() => {
@@ -54,8 +53,7 @@ const Form = () => {
             })
             .catch(error => console.error("Ошибка обновления:", error));
         } else {
-            // СОЗДАНИЕ
-            axios.post("http://localhost:5001/items", JSON.stringify(itemData), {
+            axios.post("http://172.17.7.138:5001/items", JSON.stringify(itemData), {
                 headers: { "Content-Type": "application/json" }
             })
             .then(() => {
