@@ -19,7 +19,7 @@ const Form = () => {
 
     async function loadItem() {
         try {
-            const response = await axios.get(`http://172.17.7.138:5001/items/${id}`);
+            const response = await axios.get(`https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items/${id}`);
             const item = response.data;
 
             if (titleRef.current) titleRef.current.value = item.title || "";
@@ -44,7 +44,7 @@ const Form = () => {
 
 
         if (id) {
-            axios.put(`http://172.17.7.138:5001/items/${id}`, JSON.stringify(itemData), {
+            axios.put(`https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items/${id}`, JSON.stringify(itemData), {
                 headers: { "Content-Type": "application/json" }
             })
             .then(() => {
@@ -53,7 +53,7 @@ const Form = () => {
             })
             .catch(error => console.error("Ошибка обновления:", error));
         } else {
-            axios.post("http://172.17.7.138:5001/items", JSON.stringify(itemData), {
+            axios.post("https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items", JSON.stringify(itemData), {
                 headers: { "Content-Type": "application/json" }
             })
             .then(() => {

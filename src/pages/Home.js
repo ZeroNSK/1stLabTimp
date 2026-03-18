@@ -6,7 +6,7 @@ let data = [];
 
 async function loadData() {
   try {
-    const response = await axios.get("http://172.17.7.138:5001/items");
+    const response = await axios.get("https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items");
     data = response.data;
     console.log("Данные загружены:", data);
   } catch (error) {
@@ -16,7 +16,7 @@ async function loadData() {
 
 await loadData();
 function deleteItem(id) {
-  axios.delete(`http://172.17.7.138:5001/items/${id}`)
+  axios.delete(`https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items/${id}`)
     .then(() => {
       console.log(`Запись ${id} удалена`);
       data = data.filter(item => item.id !== id);
