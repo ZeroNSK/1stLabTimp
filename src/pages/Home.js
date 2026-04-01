@@ -1,72 +1,80 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-
-let data = [];
-
-async function loadData() {
-  try {
-    const response = await axios.get("https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items");
-    data = response.data;
-    console.log("Данные загружены:", data);
-  } catch (error) {
-    console.error("Ошибка запроса:", error);
-  }
-}
-
-await loadData();
-function deleteItem(id) {
-  axios.delete(`https://69bada1cb3dcf7e0b4be41b7.mockapi.io/items/${id}`)
-    .then(() => {
-      console.log(`Запись ${id} удалена`);
-      data = data.filter(item => item.id !== id);
-      console.log("Обновленные данные:", data);
-    })
-    .catch(error => console.error("Ошибка удаления:", error));
-}
+import { getItems, deleteItemById } from '../services/itemsApi';
 
 const Home = () => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  async function loadItems() {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getItems();
+      setItems(data);
+    } catch (err) {
+      setError('Не удалось загрузить список протоколов.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(id) {
+    try {
+      setDeleteError('');
+      await deleteItemById(id);
+      setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    } catch (err) {
+      setDeleteError('Не удалось удалить запись.');
+    }
+  }
+
   return (
     <div>
       <h1>Протоколы безопасности в сфере связи и телекоммуникаций</h1>
 
-      <ul>
-        {data.map(item => (
-          <li key={item.id} style={{ marginBottom: "10px" }}>
-    
-            <Link to={`/detail/${item.id}`}>
-              {item.title || item.name}
-            </Link>
+      <div style={{ marginBottom: '16px' }}>
+        <Link to="/add">Добавить протокол</Link>
+      </div>
 
-            {item.object && (
-              <div>
-                Объект: {item.object}
-              </div>
-            )}
+      {loading && <p>Загрузка списка...</p>}
 
-            {item.severity && (
-              <div>
-                Уровень критичности: {item.severity}
-              </div>
-            )}
+      {!loading && error && <p style={{ color: 'red' }}>{error}</p>}
 
-            {item.status && (
-              <div>
-                Статус: {item.status}
-              </div>
-            )}
+      {!loading && deleteError && <p style={{ color: 'red' }}>{deleteError}</p>}
 
-            <button 
-              onClick={() => deleteItem(item.id)} 
-              style={{ marginLeft: "10px" }}
-            >
-              Удалить
-            </button>
-          </li>
-        ))}
-      </ul>
+      {!loading && !error && items.length === 0 && (
+        <p>Список пуст.</p>
+      )}
 
-      <Link to="/add">Добавить протокол</Link>
+      {!loading && !error && items.length > 0 && (
+        <ul>
+          {items.map((item) => (
+            <li key={item.id} style={{ marginBottom: '10px' }}>
+              <Link to={`/detail/${item.id}`}>
+                {item.title}
+              </Link>
+
+              <div>Объект: {item.object}</div>
+              <div>Уровень критичности: {item.severity}</div>
+              <div>Статус: {item.status}</div>
+
+              <button
+                onClick={() => handleDelete(item.id)}
+                style={{ marginTop: '10px' }}
+              >
+                Удалить
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
