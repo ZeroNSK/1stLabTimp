@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getItemById } from '../services/itemsApi';
 
 const Detail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [itemData, setItemData] = useState(null);
+  const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notFound, setNotFound] = useState(false);
@@ -24,26 +24,27 @@ const Detail = () => {
       const data = await getItemById(id);
 
       if (!data || !data.id) {
+        setItem(null);
         setNotFound(true);
-        setItemData(null);
         return;
       }
 
-      setItemData(data);
+      setItem(data);
     } catch (err) {
-      if (err.response && err.response.status === 404) {
+      if (err.response?.status === 404) {
         setNotFound(true);
       } else {
-        setError('Не удалось загрузить данные протокола.');
+        setError('Не удалось загрузить детали записи.');
       }
-      setItemData(null);
+
+      setItem(null);
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) {
-    return <p>Загрузка данных...</p>;
+    return <p>Загрузка...</p>;
   }
 
   if (error) {
@@ -53,34 +54,34 @@ const Detail = () => {
   if (notFound) {
     return (
       <div>
-        <h1>Детальная информация о протоколе безопасности</h1>
+        <h1>Детальная информация</h1>
         <p>Запись не найдена.</p>
-        <button onClick={() => navigate('/')}>Назад к списку</button>
+        <button type="button" onClick={() => navigate('/')}>
+          Назад к списку
+        </button>
       </div>
     );
   }
 
   return (
     <div>
-      <h1>Детальная информация о протоколе безопасности</h1>
+      <h1>Детальная информация</h1>
 
-      <div style={{ marginBottom: '12px' }}>
-        <div><b>ID:</b> {itemData.id}</div>
-        <div><b>Название протокола:</b> {itemData.title}</div>
-        <div><b>Объект связи:</b> {itemData.object}</div>
-        <div><b>Критичность:</b> {itemData.severity}</div>
-        <div><b>Статус:</b> {itemData.status}</div>
+      <div style={{ marginBottom: '16px' }}>
+        <div><b>ID:</b> {item.id}</div>
+        <div><b>Название:</b> {item.title}</div>
+        <div><b>Объект:</b> {item.object}</div>
+        <div><b>Критичность:</b> {item.severity}</div>
+        <div><b>Статус:</b> {item.status}</div>
       </div>
 
-      <div style={{ marginTop: '20px' }}>
-        <button onClick={() => navigate('/')}>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="button" onClick={() => navigate('/')}>
           Назад к списку
         </button>
 
-        <Link to={`/edit/${itemData.id}`}>
-          <button style={{ marginLeft: '10px' }}>
-            Редактировать
-          </button>
+        <Link to={`/edit/${item.id}`}>
+          <button type="button">Редактировать</button>
         </Link>
       </div>
     </div>

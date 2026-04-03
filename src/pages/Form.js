@@ -1,32 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { createItem, getItemById, updateItem } from '../services/itemsApi';
-
-const allowedSeverities = ['Low', 'Medium', 'High', 'Critical'];
-const allowedStatuses = ['Завершено', 'В процессе', 'Обнаружены нарушения'];
+import {
+  createItem,
+  getItemById,
+  SEVERITY_OPTIONS,
+  STATUS_OPTIONS,
+  updateItem,
+  validateItem,
+} from '../services/itemsApi';
 
 const initialFormData = {
   title: '',
   object: '',
   severity: 'Medium',
-  status: 'В процессе'
+  status: 'В процессе',
 };
 
 const Form = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isEditMode = useMemo(() => Boolean(id), [id]);
 
   const [formData, setFormData] = useState(initialFormData);
   const [fieldErrors, setFieldErrors] = useState({});
   const [pageError, setPageError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(isEditMode);
+  const [saving, setSaving] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      loadItem();
+    if (!isEditMode) {
+      setFormData(initialFormData);
+      setLoading(false);
+      setNotFound(false);
+      setPageError('');
+      return;
     }
-  }, [id]);
+
+    loadItem();
+  }, [id, isEditMode]);
 
   async function loadItem() {
     try {
@@ -42,16 +54,16 @@ const Form = () => {
       }
 
       setFormData({
-        title: item.title || '',
-        object: item.object || '',
-        severity: item.severity || 'Medium',
-        status: item.status || 'В процессе'
+        title: item.title,
+        object: item.object,
+        severity: item.severity,
+        status: item.status,
       });
     } catch (err) {
-      if (err.response && err.response.status === 404) {
+      if (err.response?.status === 404) {
         setNotFound(true);
       } else {
-        setPageError('Не удалось загрузить данные для редактирования.');
+        setPageError('Не удалось загрузить запись для редактирования.');
       }
     } finally {
       setLoading(false);
@@ -63,41 +75,21 @@ const Form = () => {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
 
     setFieldErrors((prev) => ({
       ...prev,
-      [name]: ''
+      [name]: '',
     }));
-  }
 
-  function validate(data) {
-    const errors = {};
-
-    if (!data.title.trim()) {
-      errors.title = 'Заполни название протокола.';
-    }
-
-    if (!data.object.trim()) {
-      errors.object = 'Заполни объект связи.';
-    }
-
-    if (!allowedSeverities.includes(data.severity)) {
-      errors.severity = 'Выбери допустимый уровень критичности.';
-    }
-
-    if (!allowedStatuses.includes(data.status)) {
-      errors.status = 'Выбери допустимый статус.';
-    }
-
-    return errors;
+    setPageError('');
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    const validationErrors = validate(formData);
+    const validationErrors = validateItem(formData);
     setFieldErrors(validationErrors);
     setPageError('');
 
@@ -106,9 +98,9 @@ const Form = () => {
     }
 
     try {
-      setLoading(true);
+      setSaving(true);
 
-      if (id) {
+      if (isEditMode) {
         await updateItem(id, formData);
       } else {
         await createItem(formData);
@@ -116,94 +108,120 @@ const Form = () => {
 
       navigate('/');
     } catch (err) {
-      setPageError(id
-        ? 'Не удалось сохранить изменения.'
-        : 'Не удалось создать запись.');
+      if (err.validation) {
+        setFieldErrors(err.validation);
+        return;
+      }
+
+      if (err.response?.status === 404) {
+        setNotFound(true);
+        return;
+      }
+
+      setPageError(isEditMode ? 'Не удалось сохранить изменения.' : 'Не удалось сохранить запись.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   }
 
-  if (loading && id) {
-    return <p>Загрузка формы...</p>;
+  if (loading) {
+    return <p>Загрузка...</p>;
   }
 
   if (notFound) {
-    return <p>Запись не найдена.</p>;
+    return (
+      <div>
+        <h2>{isEditMode ? 'Редактирование записи' : 'Новая запись'}</h2>
+        <p>Запись не найдена.</p>
+      </div>
+    );
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>
-        {id ? 'Редактирование протокола безопасности' : 'Добавление протокола безопасности'}
-      </h2>
+      <h2>{isEditMode ? 'Редактирование записи' : 'Добавление записи'}</h2>
 
       {pageError && <p style={{ color: 'red' }}>{pageError}</p>}
 
-      <label>
-        Название протокола:
+      <div>
+        <label htmlFor="title">Название</label>
+        <br />
         <input
-          type="text"
+          id="title"
           name="title"
+          type="text"
           value={formData.title}
           onChange={handleChange}
-          placeholder="Напр. Проверка доступа к базовой станции"
+          disabled={saving}
         />
-      </label>
-      {fieldErrors.title && <p style={{ color: 'red' }}>{fieldErrors.title}</p>}
+        {fieldErrors.title && <p style={{ color: 'red' }}>{fieldErrors.title}</p>}
+      </div>
 
-      <br /><br />
-
-      <label>
-        Объект связи:
+      <div>
+        <label htmlFor="object">Объект</label>
+        <br />
         <input
-          type="text"
+          id="object"
           name="object"
+          type="text"
           value={formData.object}
           onChange={handleChange}
-          placeholder="Напр. БС-102 / POP-1 / DC-1"
+          disabled={saving}
         />
-      </label>
-      {fieldErrors.object && <p style={{ color: 'red' }}>{fieldErrors.object}</p>}
+        {fieldErrors.object && <p style={{ color: 'red' }}>{fieldErrors.object}</p>}
+      </div>
 
-      <br /><br />
-
-      <label>
-        Критичность:
+      <div>
+        <label htmlFor="severity">Severity</label>
+        <br />
         <select
+          id="severity"
           name="severity"
           value={formData.severity}
           onChange={handleChange}
+          disabled={saving}
         >
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-          <option value="Critical">Critical</option>
+          {SEVERITY_OPTIONS.map((severity) => (
+            <option key={severity} value={severity}>
+              {severity}
+            </option>
+          ))}
         </select>
-      </label>
-      {fieldErrors.severity && <p style={{ color: 'red' }}>{fieldErrors.severity}</p>}
+        {fieldErrors.severity && <p style={{ color: 'red' }}>{fieldErrors.severity}</p>}
+      </div>
 
-      <br /><br />
-
-      <label>
-        Статус:
+      <div>
+        <label htmlFor="status">Status</label>
+        <br />
         <select
+          id="status"
           name="status"
           value={formData.status}
           onChange={handleChange}
+          disabled={saving}
         >
-          <option value="Завершено">Завершено</option>
-          <option value="В процессе">В процессе</option>
-          <option value="Обнаружены нарушения">Обнаружены нарушения</option>
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
         </select>
-      </label>
-      {fieldErrors.status && <p style={{ color: 'red' }}>{fieldErrors.status}</p>}
+        {fieldErrors.status && <p style={{ color: 'red' }}>{fieldErrors.status}</p>}
+      </div>
 
-      <br /><br />
+      <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+        <button type="submit" disabled={saving}>
+          {saving ? 'Сохранение...' : isEditMode ? 'Сохранить' : 'Создать'}
+        </button>
 
-      <button type="submit" disabled={loading}>
-        {loading ? 'Сохранение...' : id ? 'Сохранить изменения' : 'Добавить'}
-      </button>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          disabled={saving}
+        >
+          Отмена
+        </button>
+      </div>
     </form>
   );
 };
