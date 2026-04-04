@@ -7,8 +7,9 @@ import Form from './pages/Form';
 const NotFound = () => {
   return (
     <div>
-      <h1>Ошибка 404</h1>
-      <p>Ресурс не найден</p>
+      <h1>404</h1>
+      <p>HTTP Status Code: 404</p>
+      <p>Not Found</p>
       <Link to="/">На главную</Link>
     </div>
   );
@@ -18,7 +19,6 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="*" element={<NotFound />} />
         <Route path="/" element={<Home />} />
         <Route path="/detail/:id" element={<Detail />} />
         <Route path="/add" element={<Form />} />
