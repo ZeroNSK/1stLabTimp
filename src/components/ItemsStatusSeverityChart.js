@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   CartesianGrid,
+  Line,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -37,17 +38,52 @@ const yTickMap = {
 };
 
 function buildChartData(items) {
-  return items.map((item, index) => ({
-    id: item.id,
-    title: item.title,
-    object: item.object,
-    status: item.status,
-    severity: item.severity,
-    x: statusMap[item.status] || 0,
-    y: severityMap[item.severity] || 0,
-    z: 120,
-    index,
-  }));
+  const grouped = {};
+
+  items.forEach((item) => {
+    const baseX = statusMap[item.status] || 0;
+    const y = severityMap[item.severity] || 0;
+    const key = `${baseX}-${y}`;
+
+    if (!grouped[key]) {
+      grouped[key] = [];
+    }
+
+    grouped[key].push({
+      id: item.id,
+      title: item.title,
+      object: item.object,
+      status: item.status,
+      severity: item.severity,
+      baseX,
+      y,
+      z: 120,
+    });
+  });
+
+  const result = [];
+
+  Object.values(grouped).forEach((points) => {
+    const step = 0.12;
+    const middle = (points.length - 1) / 2;
+
+    points.forEach((point, index) => {
+      result.push({
+        ...point,
+        x: point.baseX + (index - middle) * step,
+      });
+    });
+  });
+
+  return result;
+}
+
+function buildLineData(chartData) {
+  return chartData.flatMap((point) => [
+    { x: point.x, y: 0, pointId: `${point.id}-start` },
+    { x: point.x, y: point.y, pointId: `${point.id}-end` },
+    { x: null, y: null, pointId: `${point.id}-break` },
+  ]);
 }
 
 const CustomTooltip = ({ active, payload }) => {
@@ -75,49 +111,26 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-const RayDot = (props) => {
-  const { cx, cy, payload } = props;
-
+const DotShape = ({ cx, cy }) => {
   if (typeof cx !== 'number' || typeof cy !== 'number') {
     return null;
   }
 
-  const bottomY = 300;
-
   return (
-    <g>
-      <line
-        x1={cx}
-        y1={bottomY}
-        x2={cx}
-        y2={cy}
-        stroke="#0077cc"
-        strokeWidth="2"
-        strokeOpacity="0.35"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r="7"
-        fill="#0077cc"
-        stroke="#ffffff"
-        strokeWidth="2"
-      />
-      <text
-        x={cx}
-        y={cy - 12}
-        textAnchor="middle"
-        fontSize="11"
-        fill="#1f2d3d"
-      >
-        {payload.id}
-      </text>
-    </g>
+    <circle
+      cx={cx}
+      cy={cy}
+      r={7}
+      fill="#0077cc"
+      stroke="#ffffff"
+      strokeWidth={2}
+    />
   );
 };
 
 const ItemsStatusSeverityChart = ({ items }) => {
   const chartData = buildChartData(items);
+  const lineData = buildLineData(chartData);
 
   if (!items.length) {
     return (
@@ -136,30 +149,63 @@ const ItemsStatusSeverityChart = ({ items }) => {
       </p>
 
       <div className="chart-wrapper">
-        <ResponsiveContainer width="100%" height={360}>
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <ResponsiveContainer width="100%" height={380}>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 55 }}>
+            <CartesianGrid strokeDasharray="4 4" />
+
             <XAxis
               type="number"
               dataKey="x"
               domain={[0.5, 3.5]}
               ticks={[1, 2, 3]}
               tickFormatter={(value) => xTickMap[value] || ''}
-              label={{ value: 'Статус', position: 'bottom', offset: 15 }}
               allowDecimals={false}
+              label={{
+                value: 'Статус',
+                position: 'bottom',
+                offset: 12,
+              }}
             />
+
             <YAxis
               type="number"
               dataKey="y"
               domain={[0.5, 4.5]}
               ticks={[1, 2, 3, 4]}
               tickFormatter={(value) => yTickMap[value] || ''}
-              label={{ value: 'Критичность', angle: -90, position: 'insideLeft' }}
               allowDecimals={false}
+              width={90}
+              label={{
+                value: 'Критичность',
+                angle: -90,
+                position: 'insideLeft',
+                offset: -28,
+                style: { textAnchor: 'middle' },
+              }}
             />
+
             <ZAxis type="number" dataKey="z" range={[120, 120]} />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '4 4' }} />
-            <Scatter data={chartData} shape={<RayDot />} />
+
+            <Line
+              type="linear"
+              data={lineData}
+              dataKey="y"
+              stroke="#0077cc"
+              strokeOpacity={0.35}
+              strokeWidth={2}
+              dot={false}
+              activeDot={false}
+              isAnimationActive={false}
+              connectNulls={false}
+            />
+
+            <Tooltip content={<CustomTooltip />} />
+
+            <Scatter
+              data={chartData}
+              shape={<DotShape />}
+              isAnimationActive={false}
+            />
           </ScatterChart>
         </ResponsiveContainer>
       </div>
