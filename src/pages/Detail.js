@@ -52,17 +52,17 @@ const Detail = () => {
   }
 
   if (notFound) {
-  return (
-    <div>
-      <h1>404</h1>
-      <p>HTTP Status Code: 404</p>
-      <p>Запись не найдена.</p>
-      <button type="button" onClick={() => navigate('/')}>
-        Назад к списку
-      </button>
-    </div>
-  );
-}
+    return (
+      <div>
+        <h1>Детальная информация</h1>
+        <p>Запись не найдена.</p>
+        <button type="button" onClick={() => navigate('/')}>
+          Назад к списку
+        </button>
+      </div>
+
+    );
+  }
 
   return (
     <div>

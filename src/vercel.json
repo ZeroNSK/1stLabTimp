@@ -1,8 +1,7 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/add", "destination": "/index.html" },
+    { "source": "/detail/:id", "destination": "/index.html" },
+    { "source": "/edit/:id", "destination": "/index.html" }
   ]
 }

@@ -136,18 +136,6 @@ const Form = () => {
       </div>
     );
   }
-  if (notFound) {
-  return (
-    <div>
-      <h2>404</h2>
-      <p>HTTP Status Code: 404</p>
-      <p>Запись не найдена.</p>
-      <button type="button" onClick={() => navigate('/')}>
-        Назад к списку
-      </button>
-    </div>
-  );
-}
 
   return (
     <form onSubmit={handleSubmit}>
