@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { deleteItemById, getItems } from '../services/itemsApi';
-import ItemsRadarChart from '../components/ItemsRadarChart';
+import ItemsStatusSeverityChart from '../components/ItemsStatusSeverityChart';
 
 const Home = () => {
   const [items, setItems] = useState([]);
@@ -84,7 +84,7 @@ const Home = () => {
       </div>
 
       <div className="home-right">
-        {!loading && !error && <ItemsRadarChart items={items} />}
+        {!loading && !error && <ItemsStatusSeverityChart items={items} />}
       </div>
     </div>
   );

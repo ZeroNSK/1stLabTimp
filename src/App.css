@@ -63,7 +63,7 @@ p {
 
 .home-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
+  grid-template-columns: minmax(0, 1fr) 460px;
   gap: 24px;
   align-items: start;
 }
@@ -96,7 +96,7 @@ p {
 
 .chart-wrapper {
   width: 100%;
-  height: 420px;
+  height: 360px;
 }
 
 @media (max-width: 1100px) {
